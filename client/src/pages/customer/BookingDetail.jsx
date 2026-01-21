@@ -24,10 +24,10 @@ function BookingDetail() {
 
     const fetchEvents = async () => {
         try {
-            const response = await api.get(`/admin/events?bookingId=${id}`)
+            const response = await api.get(`/bookings/${id}/history`)
             setEvents(response.data)
         } catch (error) {
-            console.log('Events fetch skipped for non-admin')
+            console.log('Events fetch failed')
         }
     }
 
@@ -79,8 +79,8 @@ function BookingDetail() {
                                 <div key={step} className="flex-1 relative">
                                     <div className="flex flex-col items-center">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${index <= currentStepIndex
-                                                ? 'bg-primary-600 text-white'
-                                                : 'bg-secondary-200 text-secondary-400'
+                                            ? 'bg-primary-600 text-white'
+                                            : 'bg-secondary-200 text-secondary-400'
                                             }`}>
                                             {index < currentStepIndex ? (
                                                 <CheckCircle size={20} />

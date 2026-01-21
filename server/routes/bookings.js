@@ -1,5 +1,6 @@
 import express from 'express';
 import Booking from '../models/Booking.js';
+import User from '../models/User.js';
 import { protect, authorize } from '../middleware/auth.js';
 import { logEvent } from '../services/eventLogger.js';
 import { validateTransition } from '../services/bookingStateMachine.js';
@@ -44,9 +45,19 @@ router.get('/:id', protect, async (req, res) => {
     }
 });
 
+router.get('/:id/history', protect, async (req, res) => {
+    try {
+        const { getBookingHistory } = await import('../services/eventLogger.js');
+        const events = await getBookingHistory(req.params.id);
+        res.json(events);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 router.post('/', protect, authorize('customer'), async (req, res) => {
     try {
-        const { service, scheduledDate, scheduledTime, address, description, estimatedPrice } = req.body;
+        const { service, scheduledDate, scheduledTime, address, description, estimatedPrice, autoAssign = true } = req.body;
 
         const booking = await Booking.create({
             customerId: req.user._id,
@@ -72,8 +83,32 @@ router.post('/', protect, authorize('customer'), async (req, res) => {
             description: `Booking created for ${service} service`
         });
 
+        if (autoAssign) {
+            const result = await assignProviderToBooking(booking);
+            if (result.success) {
+                booking.providerId = result.provider._id;
+                booking.status = 'assigned';
+                await booking.save();
+
+                await logEvent({
+                    bookingId: booking._id,
+                    eventType: 'PROVIDER_ASSIGNED',
+                    previousState: 'pending',
+                    newState: 'assigned',
+                    actor: {
+                        userId: req.user._id,
+                        role: 'system',
+                        name: 'Auto-Assignment'
+                    },
+                    metadata: { providerId: result.provider._id },
+                    description: `Provider ${result.provider.name} auto-assigned to booking`
+                });
+            }
+        }
+
         const populated = await Booking.findById(booking._id)
-            .populate('customerId', 'name email phone');
+            .populate('customerId', 'name email phone')
+            .populate('providerId', 'name email phone rating');
 
         res.status(201).json(populated);
     } catch (error) {
@@ -147,6 +182,10 @@ router.patch('/:id/status', protect, async (req, res) => {
         if (status === 'cancelled') {
             booking.cancelledBy = req.user.role;
             booking.cancellationReason = reason || '';
+        }
+
+        if (status === 'completed' && booking.providerId) {
+            await User.findByIdAndUpdate(booking.providerId, { $inc: { completedJobs: 1 } });
         }
 
         await booking.save();
