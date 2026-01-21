@@ -2,21 +2,27 @@ import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { createBooking } from '../../store/bookingSlice'
-import { Calendar, Clock, MapPin, FileText, Loader2, ArrowLeft, CreditCard } from 'lucide-react'
+import { Calendar, Clock, MapPin, FileText, Loader2, ArrowLeft, CheckCircle, ArrowRight } from 'lucide-react'
 
 const SERVICES = [
-    { id: 'cleaning', label: 'Home Cleaning', icon: '🧹', price: 500, description: 'Deep cleaning for your home' },
-    { id: 'plumbing', label: 'Plumbing', icon: '🔧', price: 400, description: 'Fix leaks, pipes, and drainage' },
-    { id: 'electrical', label: 'Electrical', icon: '💡', price: 450, description: 'Wiring, fixtures, and repairs' },
-    { id: 'ac-repair', label: 'AC Repair', icon: '❄️', price: 600, description: 'AC servicing and repairs' },
-    { id: 'painting', label: 'Painting', icon: '🎨', price: 800, description: 'Interior and exterior painting' },
-    { id: 'carpentry', label: 'Carpentry', icon: '🪚', price: 550, description: 'Furniture repairs and custom work' },
-    { id: 'pest-control', label: 'Pest Control', icon: '🐜', price: 700, description: 'Eliminate pests from your home' },
+    { id: 'cleaning', label: 'Home Cleaning', icon: '🧹', price: 500, description: 'Deep cleaning for your home', color: 'bg-emerald-100 border-emerald-200' },
+    { id: 'plumbing', label: 'Plumbing', icon: '🔧', price: 400, description: 'Fix leaks, pipes, and drainage', color: 'bg-blue-100 border-blue-200' },
+    { id: 'electrical', label: 'Electrical', icon: '💡', price: 450, description: 'Wiring, fixtures, and repairs', color: 'bg-amber-100 border-amber-200' },
+    { id: 'ac-repair', label: 'AC Repair', icon: '❄️', price: 600, description: 'AC servicing and repairs', color: 'bg-cyan-100 border-cyan-200' },
+    { id: 'painting', label: 'Painting', icon: '🎨', price: 800, description: 'Interior and exterior painting', color: 'bg-pink-100 border-pink-200' },
+    { id: 'carpentry', label: 'Carpentry', icon: '🪚', price: 550, description: 'Furniture repairs and custom work', color: 'bg-orange-100 border-orange-200' },
+    { id: 'pest-control', label: 'Pest Control', icon: '🐜', price: 700, description: 'Eliminate pests from your home', color: 'bg-red-100 border-red-200' },
 ]
 
 const TIME_SLOTS = [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
     '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'
+]
+
+const STEPS = [
+    { id: 1, label: 'Service' },
+    { id: 2, label: 'Schedule' },
+    { id: 3, label: 'Address' }
 ]
 
 function NewBooking() {
@@ -76,43 +82,57 @@ function NewBooking() {
         <div className="max-w-2xl mx-auto">
             <button
                 onClick={() => step > 1 ? setStep(step - 1) : navigate('/dashboard')}
-                className="flex items-center gap-2 text-secondary-600 hover:text-secondary-900 mb-6"
+                className="flex items-center gap-2 text-secondary-500 hover:text-secondary-900 mb-6 font-medium transition-colors"
             >
-                <ArrowLeft size={18} />
+                <ArrowLeft size={20} />
                 {step > 1 ? 'Back' : 'Cancel'}
             </button>
 
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-secondary-900">Book a Service</h1>
-                <p className="text-secondary-600 mt-1">Step {step} of 3</p>
-                <div className="flex gap-2 mt-4">
-                    {[1, 2, 3].map((s) => (
-                        <div
-                            key={s}
-                            className={`h-2 flex-1 rounded-full transition-colors ${s <= step ? 'bg-primary-600' : 'bg-secondary-200'
-                                }`}
-                        />
+                <h1 className="text-3xl font-bold text-secondary-900">Book a Service</h1>
+                <p className="text-secondary-500 mt-1">Complete the steps below to schedule your service</p>
+
+                <div className="flex items-center gap-2 mt-6">
+                    {STEPS.map((s, i) => (
+                        <div key={s.id} className="flex items-center flex-1">
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm transition-all ${step > s.id
+                                    ? 'bg-emerald-500 text-white'
+                                    : step === s.id
+                                        ? 'bg-primary-600 text-white shadow-lg'
+                                        : 'bg-secondary-100 text-secondary-400'
+                                }`}>
+                                {step > s.id ? <CheckCircle size={20} /> : s.id}
+                            </div>
+                            <span className={`ml-3 font-semibold hidden sm:block ${step >= s.id ? 'text-secondary-900' : 'text-secondary-400'
+                                }`}>{s.label}</span>
+                            {i < STEPS.length - 1 && (
+                                <div className={`flex-1 h-1 mx-4 rounded-full ${step > s.id ? 'bg-emerald-500' : 'bg-secondary-200'
+                                    }`} />
+                            )}
+                        </div>
                     ))}
                 </div>
             </div>
 
             {step === 1 && (
-                <div>
-                    <h2 className="text-lg font-semibold text-secondary-900 mb-4">Select a Service</h2>
+                <div className="animate-fade-in">
+                    <h2 className="text-xl font-bold text-secondary-900 mb-4">What do you need help with?</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {SERVICES.map((service) => (
                             <button
                                 key={service.id}
                                 onClick={() => handleServiceSelect(service.id)}
-                                className={`card text-left hover:shadow-md transition-shadow ${formData.service === service.id ? 'ring-2 ring-primary-500' : ''
+                                className={`card-interactive text-left border-2 ${formData.service === service.id
+                                        ? 'border-primary-500 bg-primary-50'
+                                        : `${service.color}`
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
-                                    <span className="text-3xl">{service.icon}</span>
+                                    <span className="text-4xl">{service.icon}</span>
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-secondary-900">{service.label}</h3>
-                                        <p className="text-sm text-secondary-600 mt-1">{service.description}</p>
-                                        <p className="text-primary-600 font-semibold mt-2">₹{service.price}</p>
+                                        <h3 className="font-bold text-secondary-900 text-lg">{service.label}</h3>
+                                        <p className="text-sm text-secondary-500 mt-1">{service.description}</p>
+                                        <p className="text-primary-600 font-bold text-lg mt-2">₹{service.price}</p>
                                     </div>
                                 </div>
                             </button>
@@ -122,12 +142,12 @@ function NewBooking() {
             )}
 
             {step === 2 && (
-                <div>
-                    <h2 className="text-lg font-semibold text-secondary-900 mb-4">Select Date & Time</h2>
-                    <div className="card">
+                <div className="animate-fade-in">
+                    <h2 className="text-xl font-bold text-secondary-900 mb-4">When works for you?</h2>
+                    <div className="card-static">
                         <div className="mb-6">
                             <label className="label flex items-center gap-2">
-                                <Calendar size={16} />
+                                <Calendar size={18} className="text-primary-600" />
                                 Select Date
                             </label>
                             <input
@@ -143,7 +163,7 @@ function NewBooking() {
 
                         <div>
                             <label className="label flex items-center gap-2">
-                                <Clock size={16} />
+                                <Clock size={18} className="text-primary-600" />
                                 Select Time Slot
                             </label>
                             <div className="grid grid-cols-4 gap-2">
@@ -152,8 +172,8 @@ function NewBooking() {
                                         key={time}
                                         type="button"
                                         onClick={() => setFormData({ ...formData, scheduledTime: time })}
-                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formData.scheduledTime === time
-                                                ? 'bg-primary-600 text-white'
+                                        className={`px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${formData.scheduledTime === time
+                                                ? 'bg-primary-600 text-white shadow-md'
                                                 : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'
                                             }`}
                                     >
@@ -166,22 +186,22 @@ function NewBooking() {
                         <button
                             onClick={() => setStep(3)}
                             disabled={!canProceedToStep3}
-                            className="btn-primary w-full mt-6"
+                            className="btn-primary w-full mt-8 h-12 flex items-center justify-center gap-2"
                         >
-                            Continue
+                            Continue <ArrowRight size={20} />
                         </button>
                     </div>
                 </div>
             )}
 
             {step === 3 && (
-                <form onSubmit={handleSubmit}>
-                    <h2 className="text-lg font-semibold text-secondary-900 mb-4">Service Address</h2>
-                    <div className="card mb-6">
-                        <div className="space-y-4">
+                <form onSubmit={handleSubmit} className="animate-fade-in">
+                    <h2 className="text-xl font-bold text-secondary-900 mb-4">Where should we come?</h2>
+                    <div className="card-static mb-6">
+                        <div className="space-y-5">
                             <div>
                                 <label className="label flex items-center gap-2">
-                                    <MapPin size={16} />
+                                    <MapPin size={18} className="text-primary-600" />
                                     Street Address
                                 </label>
                                 <input
@@ -224,7 +244,7 @@ function NewBooking() {
 
                             <div>
                                 <label className="label flex items-center gap-2">
-                                    <FileText size={16} />
+                                    <FileText size={18} className="text-primary-600" />
                                     Additional Notes (Optional)
                                 </label>
                                 <textarea
@@ -239,20 +259,23 @@ function NewBooking() {
                         </div>
                     </div>
 
-                    <div className="card mb-6">
-                        <h3 className="font-semibold text-secondary-900 mb-4">Booking Summary</h3>
+                    <div className="card-static bg-primary-50 border-primary-100 mb-6">
+                        <h3 className="font-bold text-secondary-900 mb-4">Booking Summary</h3>
                         <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
+                            <div className="flex justify-between items-center">
                                 <span className="text-secondary-600">Service</span>
-                                <span className="font-medium capitalize">{formData.service.replace('-', ' ')}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl">{selectedService?.icon}</span>
+                                    <span className="font-semibold">{selectedService?.label}</span>
+                                </div>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-secondary-600">Date & Time</span>
-                                <span className="font-medium">{formData.scheduledDate} at {formData.scheduledTime}</span>
+                                <span className="font-semibold">{formData.scheduledDate} • {formData.scheduledTime}</span>
                             </div>
-                            <div className="flex justify-between pt-3 border-t border-secondary-100">
-                                <span className="text-secondary-900 font-semibold">Estimated Total</span>
-                                <span className="text-primary-600 font-bold text-lg">₹{selectedService?.price || 0}</span>
+                            <div className="flex justify-between pt-4 border-t border-primary-200">
+                                <span className="text-secondary-900 font-bold text-base">Total</span>
+                                <span className="text-primary-600 font-bold text-2xl">₹{selectedService?.price || 0}</span>
                             </div>
                         </div>
                     </div>
@@ -260,16 +283,16 @@ function NewBooking() {
                     <button
                         type="submit"
                         disabled={!canSubmit || isLoading}
-                        className="btn-primary w-full flex items-center justify-center gap-2"
+                        className="btn-primary w-full h-14 flex items-center justify-center gap-2 text-lg"
                     >
                         {isLoading ? (
                             <>
-                                <Loader2 className="animate-spin" size={18} />
+                                <Loader2 className="animate-spin" size={22} />
                                 Creating Booking...
                             </>
                         ) : (
                             <>
-                                <CreditCard size={18} />
+                                <CheckCircle size={22} />
                                 Confirm Booking
                             </>
                         )}
