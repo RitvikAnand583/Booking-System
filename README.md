@@ -196,21 +196,3 @@ stateDiagram-v2
     completed --> [*]
     cancelled --> [*]
 ```
-
----
-
-## 🔮 Future Improvements
-
-- [ ] Real-time updates with Socket.io
-- [ ] Email/SMS notifications
-- [ ] Payment gateway integration
-- [ ] Provider rating system
-- [ ] Geographic distance-based assignment
-- [ ] Recurring bookings
-- [ ] Mobile app (React Native)
-
----
-
-## 👨‍💻 Author
-
-Built for CleanFanatics Home Services Hiring Assignment
